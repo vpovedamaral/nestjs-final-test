@@ -1,46 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, Task } from '@prisma/client';
+import { Task } from '@prisma/client';
+import { PrismaService } from '../infrastructure/database/prisma.service';
 
 @Injectable()
 export class TaskService {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    constructor(private prisma: PrismaService) {}
 
     async addTask(
         name: string,
         userId: number,
         priority: number,
     ): Promise<Task> {
-        return this.prisma.task.create({
-            data: {
-                name,
-                priority,
-                userId,
-            },
-        });
+        return this.prisma.task.create({ data: { name, userId, priority } });
     }
 
     async getTaskByName(name: string): Promise<Task | null> {
-        const task = await this.prisma.task.findFirst({
-            where: {
-                name,
-            },
-        });
-        return task;
+        return this.prisma.task.findFirst({ where: { name } });
     }
 
     async getUserTasks(userId: number): Promise<Task[]> {
-        return this.prisma.task.findMany({
-            where: {
-                userId,
-            },
-        });
+        return this.prisma.task.findMany({ where: { userId } });
     }
 
     async resetData(): Promise<void> {
-        await this.prisma.task.deleteMany();
+        await this.prisma.task.deleteMany({});
     }
 }
