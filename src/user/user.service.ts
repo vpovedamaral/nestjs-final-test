@@ -1,18 +1,35 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PrismaClient, User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-    constructor() {}
+    private prisma = new PrismaClient();
 
-    addUser(email: string): Promise<void> {
-        throw new NotImplementedException();
+    async createUser(email: string): Promise<User> {
+        return this.prisma.user.create({
+            data: {
+                email,
+            },
+        });
     }
 
-    getUser(email: string): Promise<unknown> {
-        throw new NotImplementedException();
+    async getUserByEmail(email: string): Promise<User | null> {
+        return this.prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
     }
 
-    resetData(): Promise<void> {
-        throw new NotImplementedException();
+    async getAllUsers(): Promise<User[]> {
+        return this.prisma.user.findMany();
+    }
+
+    async deleteUser(id: number): Promise<void> {
+        await this.prisma.user.delete({
+            where: {
+                id,
+            },
+        });
     }
 }
