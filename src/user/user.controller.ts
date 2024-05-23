@@ -1,28 +1,29 @@
-import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Body,
+    HttpStatus,
+    HttpCode,
+    BadRequestException,
+    ConflictException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from '@prisma/client';
 
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Post()
-    async createUser(@Body('email') email: string): Promise<User> {
-        return this.userService.createUser(email);
-    }
-
-    @Get(':email')
-    async getUserByEmail(@Param('email') email: string): Promise<User | null> {
-        return this.userService.getUserByEmail(email);
-    }
-
-    @Get()
-    async getAllUsers(): Promise<User[]> {
-        return this.userService.getAllUsers();
-    }
-
-    @Delete(':id')
-    async deleteUser(@Param('id') id: number): Promise<void> {
-        return this.userService.deleteUser(id);
+    @HttpCode(HttpStatus.CREATED)
+    async createUser(@Body('email') email: string) {
+        try {
+            const user = await this.userService.addUser(email);
+            return user;
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new ConflictException('User already exists.');
+            }
+            throw new BadRequestException('Invalid request.');
+        }
     }
 }

@@ -3,12 +3,16 @@ import { PrismaClient, Task } from '@prisma/client';
 
 @Injectable()
 export class TaskService {
-    private prisma = new PrismaClient();
+    private prisma: PrismaClient;
 
-    async createTask(
+    constructor() {
+        this.prisma = new PrismaClient();
+    }
+
+    async addTask(
         name: string,
-        priority: number,
         userId: number,
+        priority: number,
     ): Promise<Task> {
         return this.prisma.task.create({
             data: {
@@ -19,7 +23,16 @@ export class TaskService {
         });
     }
 
-    async getTasksByUserId(userId: number): Promise<Task[]> {
+    async getTaskByName(name: string): Promise<Task | null> {
+        const task = await this.prisma.task.findFirst({
+            where: {
+                name,
+            },
+        });
+        return task;
+    }
+
+    async getUserTasks(userId: number): Promise<Task[]> {
         return this.prisma.task.findMany({
             where: {
                 userId,
@@ -27,15 +40,7 @@ export class TaskService {
         });
     }
 
-    async getAllTasks(): Promise<Task[]> {
-        return this.prisma.task.findMany();
-    }
-
-    async deleteTask(id: number): Promise<void> {
-        await this.prisma.task.delete({
-            where: {
-                id,
-            },
-        });
+    async resetData(): Promise<void> {
+        await this.prisma.task.deleteMany();
     }
 }

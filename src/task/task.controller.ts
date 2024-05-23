@@ -1,32 +1,42 @@
-import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Param,
+    HttpStatus,
+    HttpCode,
+    BadRequestException,
+} from '@nestjs/common';
 import { TaskService } from './task.service';
-import { Task } from '@prisma/client';
 
 @Controller('task')
 export class TaskController {
     constructor(private readonly taskService: TaskService) {}
 
-    @Post()
-    async createTask(
-        @Body('name') name: string,
-        @Body('priority') priority: number,
-        @Body('userId') userId: number,
-    ): Promise<Task> {
-        return this.taskService.createTask(name, priority, userId);
-    }
-
     @Get(':userId')
-    async getTasksByUserId(@Param('userId') userId: number): Promise<Task[]> {
-        return this.taskService.getTasksByUserId(userId);
+    async getUserTasks(@Param('userId') userId: string) {
+        if (isNaN(+userId)) {
+            throw new BadRequestException('Invalid userId.');
+        }
+        const tasks = await this.taskService.getUserTasks(+userId);
+        return tasks;
     }
 
-    @Get()
-    async getAllTasks(): Promise<Task[]> {
-        return this.taskService.getAllTasks();
-    }
-
-    @Delete(':id')
-    async deleteTask(@Param('id') id: number): Promise<void> {
-        return this.taskService.deleteTask(id);
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    async createTask(@Body() taskData: any) {
+        const { name, userId, priority } = taskData;
+        if (
+            !name ||
+            !userId ||
+            !priority ||
+            isNaN(+userId) ||
+            isNaN(+priority)
+        ) {
+            throw new BadRequestException('Invalid task data.');
+        }
+        const task = await this.taskService.addTask(name, +userId, +priority);
+        return task;
     }
 }

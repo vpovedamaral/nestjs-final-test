@@ -3,9 +3,13 @@ import { PrismaClient, User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-    private prisma = new PrismaClient();
+    private prisma: PrismaClient;
 
-    async createUser(email: string): Promise<User> {
+    constructor() {
+        this.prisma = new PrismaClient();
+    }
+
+    async addUser(email: string): Promise<User> {
         return this.prisma.user.create({
             data: {
                 email,
@@ -13,7 +17,7 @@ export class UserService {
         });
     }
 
-    async getUserByEmail(email: string): Promise<User | null> {
+    async getUser(email: string): Promise<User | null> {
         return this.prisma.user.findUnique({
             where: {
                 email,
@@ -21,15 +25,7 @@ export class UserService {
         });
     }
 
-    async getAllUsers(): Promise<User[]> {
-        return this.prisma.user.findMany();
-    }
-
-    async deleteUser(id: number): Promise<void> {
-        await this.prisma.user.delete({
-            where: {
-                id,
-            },
-        });
+    async resetData(): Promise<void> {
+        await this.prisma.user.deleteMany();
     }
 }
